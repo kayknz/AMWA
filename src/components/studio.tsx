@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, Share2 } from "lucide-react";
-import { DemoWebsite } from "@/components/demo-websites";
-import type { PackageId } from "@/lib/content";
+import { DemoWebsite, type DemoPackage } from "@/components/demo-websites";
+import { packages, type PackageId } from "@/lib/content";
 
 const STORAGE_KEY = "alden-dream";
 const LANGUAGE_STORAGE_KEY = "alden-demo-language";
@@ -14,7 +14,7 @@ type Item = { name: string; meta: string; price: string };
 type Trade = {
   id: TradeId;
   label: string;
-  packageId: PackageId;
+  packageId: DemoPackage;
   verb: string;
   listLabel: string;
   bookLabel: string;
@@ -140,6 +140,10 @@ const trades: Trade[] = [
 ];
 
 const areas = ["West Bay", "The Pearl", "Lusail", "Al Sadd", "Msheireb"];
+const packageOptions = (trade: TradeId): DemoPackage[] =>
+  trade === "restaurant" ? ["business", "bookings", "store"] :
+  trade === "boutique" ? ["business", "store"] :
+  ["business", "bookings"];
 
 const arabicAreas: Record<string, string> = {
   "West Bay": "الخليج الغربي",
@@ -274,6 +278,7 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
   const [ready, setReady] = useState(false);
   const [picked, setPicked] = useState(0);
   const [when, setWhen] = useState(0);
+  const [selectedPackage, setSelectedPackage] = useState<DemoPackage>("bookings");
 
   useEffect(() => {
     try {
@@ -294,8 +299,13 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
       /* ignore broken drafts */
     }
     const params = new URLSearchParams(window.location.search);
+    const storedTrade = trades.find((entry) => entry.id === draft.trade) ?? trades[0];
+    setSelectedPackage(storedTrade.packageId);
     if (params.get("demo") === "1") {
       const sharedTrade = params.get("trade");
+      const nextTrade = trades.find((entry) => entry.id === sharedTrade) ?? storedTrade;
+      const sharedPackage = params.get("package") as DemoPackage | null;
+      setSelectedPackage(sharedPackage && packageOptions(nextTrade.id).includes(sharedPackage) ? sharedPackage : nextTrade.packageId);
       setLanguage(params.get("lang") === "ar" ? "ar" : "en");
       setDraft((current) => ({
         ...current,
@@ -354,6 +364,7 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
     }));
     setPicked(0);
     setWhen(0);
+    setSelectedPackage(next.packageId);
   }
 
   function shareDemo() {
@@ -365,6 +376,7 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
       business: name,
       line,
       area: draft.area,
+      package: selectedPackage,
     }).toString();
     const message = `Try this website direction for ${name}: ${url.toString()}`;
     window.open(
@@ -374,7 +386,8 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
     );
   }
 
-  const summary = `${name} · ${trade.label} · ${draft.area} · ${previewItem.name} · ${previewTime} · ${language === "ar" ? "Arabic preview" : "English preview"}`;
+  const packageName = packages.find((item) => item.id === selectedPackage)?.name ?? "Business Website";
+  const summary = `${name} · ${trade.label} · ${packageName} · ${draft.area} · ${previewItem.name} · ${previewTime} · ${language === "ar" ? "Arabic preview" : "English preview"}`;
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-12">
@@ -422,6 +435,19 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
                   {entry.label}
                 </button>
               ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend className="text-xs font-semibold uppercase tracking-wider text-muted">Website package</legend>
+            <div className="mt-2 space-y-2">
+              {packageOptions(draft.trade).map((id) => {
+                const item = packages.find((entry) => entry.id === id)!;
+                const detail = id === "business" ? "Pages and customer enquiries" : id === "bookings" ? "Services, availability and bookings" : "Products, cart and sample orders";
+                return <button key={id} type="button" aria-pressed={selectedPackage === id} onClick={() => setSelectedPackage(id)} className={`w-full rounded-xl border p-3 text-start ${selectedPackage === id ? "border-copper bg-paper-deep" : "border-line bg-surface"}`}>
+                  <span className="flex justify-between gap-2 text-sm font-semibold"><span>{item.name}</span><span>QAR {item.price}</span></span>
+                  <span className="mt-1 block text-xs text-muted">{detail}</span>
+                </button>;
+              })}
             </div>
           </fieldset>
           <label className="block text-sm font-medium">
@@ -484,7 +510,7 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
           <button
             type="button"
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-copper text-sm font-semibold text-ink"
-            onClick={() => onKeep(summary, trade.packageId)}
+            onClick={() => onKeep(summary, selectedPackage)}
           >
             Use this direction in my enquiry <ArrowRight size={16} />
           </button>
@@ -496,13 +522,7 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
             <Share2 size={16} /> Share this demo on WhatsApp
           </button>
           <p className="text-xs text-muted">
-            Suggests the{" "}
-            {trade.packageId === "store"
-              ? "Online Store"
-              : trade.packageId === "bookings"
-                ? "Booking System"
-                : "Business Website"}{" "}
-            package. You can change it on the enquiry.
+          This demo is showing the {packageName} package.
           </p>
         </form>
 
@@ -522,6 +542,7 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
           </div>
           <DemoWebsite
             sector={draft.trade}
+            packageId={selectedPackage}
             name={previewName}
             line={previewLine}
             area={previewArea}

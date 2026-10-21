@@ -17,6 +17,7 @@ import {
 
 type Sector = "restaurant" | "boutique" | "clinic" | "gym" | "salon" | "firm" | "property";
 type Item = { name: string; meta: string; price: string };
+export type DemoPackage = "business" | "bookings" | "store";
 
 const demoPhotos: Record<Sector, string> = {
   restaurant:
@@ -147,6 +148,7 @@ const copy = {
 
 export function DemoWebsite({
   sector,
+  packageId,
   name,
   line,
   area,
@@ -158,6 +160,7 @@ export function DemoWebsite({
   onAction,
 }: {
   sector: Sector;
+  packageId: DemoPackage;
   name: string;
   line: string;
   area: string;
@@ -371,26 +374,30 @@ export function DemoWebsite({
       </a>
       {miniNav}
       <div className="flex items-center gap-2">
-        {sector === "boutique" && (
+        {packageId === "store" && (sector === "boutique" || sector === "restaurant") && (
           <span className="inline-flex items-center gap-1 text-xs">
             <ShoppingBag size={15} />
             {cart}
           </span>
         )}
         {button(
-          sector === "restaurant"
-            ? t.book
-            : sector === "boutique"
-              ? t.browse
-              : sector === "gym"
-                ? t.plans
-                : sector === "property"
-                  ? t.homes
-                  : sector === "firm"
-                    ? t.enquire
-                    : t.appointment,
+          packageId === "store"
+            ? sector === "restaurant"
+              ? "Order online"
+              : t.browse
+            : packageId === "bookings"
+              ? sector === "restaurant"
+                ? t.book
+                : sector === "gym"
+                  ? t.plans
+                  : sector === "property"
+                    ? t.homes
+                    : t.appointment
+              : language === "ar"
+                ? "تواصل معنا"
+                : "Contact us",
           () =>
-            sector === "boutique"
+            packageId === "store"
               ? document.getElementById("offer")?.scrollIntoView({ behavior: "smooth" })
               : setModal(true),
           "min-h-10 px-4 text-xs",
@@ -620,10 +627,12 @@ export function DemoWebsite({
                 <button
                   onClick={() => {
                     setPicked(i);
+                  if (packageId === "store") {
                     setCart((n) => n + 1);
                     setMessage(t.added);
+                  } else setModal(true);
                   }}
-                  aria-label={t.add}
+                aria-label={packageId === "store" ? t.add : t.details}
                   className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-current/20"
                 >
                   <Plus size={15} />
@@ -1265,7 +1274,7 @@ export function DemoWebsite({
         </p>
         {!message && (
           <>
-            <div className="mt-5 flex flex-wrap gap-2">
+            {packageId === "bookings" && <div className="mt-5 flex flex-wrap gap-2">
               {(sector === "restaurant" ||
               sector === "clinic" ||
               sector === "salon" ||
@@ -1282,9 +1291,9 @@ export function DemoWebsite({
                   {slot}
                 </button>
               ))}
-            </div>
+            </div>}
             <label className="mt-4 block text-xs font-medium">
-              {sector === "boutique"
+              {packageId === "store"
                 ? "Email for order updates"
                 : sector === "firm"
                   ? "Email or phone"
@@ -1292,27 +1301,31 @@ export function DemoWebsite({
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={sector === "boutique" ? "you@example.com" : "Your name"}
+              placeholder={packageId === "store" ? "you@example.com" : "Your name"}
                 className="mt-2 h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-sm"
               />
             </label>
           </>
         )}
         {button(
-          message ? t.next : sector === "boutique" ? t.add : t.request,
+          message ? t.next : packageId === "store" ? t.add : packageId === "bookings" ? t.request : "Send enquiry",
           () => {
             if (message) {
               setModal(false);
               setMessage("");
               return;
             }
-            if (sector === "boutique") setCart((n) => n + 1);
-            else
+            if (packageId === "store") {
+              setCart((n) => n + 1);
+              setMessage(t.added);
+              return;
+            }
+            if (packageId === "bookings")
               onAction(
                 `${displayName} · ${selectedItem.name} · ${times[activeTime % times.length] ?? "This week"}`,
                 activeTime,
               );
-            setMessage(sector === "boutique" ? t.added : t.requested);
+            setMessage(t.requested);
           },
           "mt-5 w-full",
         )}
