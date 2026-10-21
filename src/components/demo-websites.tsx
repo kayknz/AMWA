@@ -629,7 +629,9 @@ export function DemoWebsite({
             "Pieces for the way you live",
             "Small runs, thoughtful fabrics, and a little something you will keep for years.",
           )}
-          <p className={`hidden text-xs md:block ${quiet}`}>{cart} items in your bag</p>
+          {packageId === "store" && (
+            <p className={`hidden text-xs md:block ${quiet}`}>{cart} items in your bag</p>
+          )}
         </div>
         <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
           {items.map((item, i) => (
