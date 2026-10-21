@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, Share2 } from "lucide-react";
+import { ArrowRight, Maximize2, Share2, X } from "lucide-react";
 import { DemoWebsite, type DemoPackage } from "@/components/demo-websites";
 import { packages, type PackageId } from "@/lib/content";
 
@@ -281,6 +281,21 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
   const [picked, setPicked] = useState(0);
   const [when, setWhen] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<DemoPackage>("bookings");
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [expanded]);
 
   useEffect(() => {
     let restored: Draft = initial;
@@ -582,8 +597,29 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
           <p className="text-xs text-muted">This demo is showing the {packageName} package.</p>
         </form>
 
-        <div className="overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
-          <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+        <div
+          role={expanded ? "dialog" : undefined}
+          aria-modal={expanded ? "true" : undefined}
+          aria-label={expanded ? `${name} full website demo` : undefined}
+          className={`${expanded ? "fixed inset-0 z-[100] overflow-y-auto rounded-none border-0 bg-paper p-0" : "overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface"}`}
+        >
+          {expanded && (
+            <div className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-ink px-4 py-3 text-paper sm:px-7">
+              <p className="text-xs font-semibold tracking-wide text-paper/75">
+                {language === "ar" ? "معاينة الموقع الكامل" : "FULL WEBSITE PREVIEW"}
+                <span className="mx-2 text-copper">/</span>
+                {packageName.toUpperCase()}
+              </p>
+              <button
+                type="button"
+                onClick={() => setExpanded(false)}
+                className="inline-flex min-h-10 items-center gap-2 rounded-full border border-paper/25 px-4 text-sm font-semibold hover:bg-paper/10"
+              >
+                {language === "ar" ? "إغلاق" : "Back to Alden"} <X size={16} />
+              </button>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
             <span className="h-2.5 w-2.5 rounded-full bg-line" />
             <span className="h-2.5 w-2.5 rounded-full bg-line" />
             <span className="h-2.5 w-2.5 rounded-full bg-line" />
@@ -595,6 +631,20 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
                 ? "نموذج تجريبي · لا توجد معاملات حقيقية"
                 : "Concept demo · no live transactions"}
             </span>
+            {!expanded ? (
+              <button
+                type="button"
+                onClick={() => setExpanded(true)}
+                className="inline-flex min-h-10 items-center gap-2 rounded-full bg-ink px-4 text-xs font-semibold text-paper hover:bg-ink/85"
+              >
+                {language === "ar" ? "استكشف الموقع كاملاً" : "Open full website"}
+                <Maximize2 size={14} />
+              </button>
+            ) : (
+              <span className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line px-4 text-xs font-semibold text-muted">
+                {language === "ar" ? "موقع توضيحي" : "Illustrative concept site"}
+              </span>
+            )}
           </div>
           <DemoWebsite
             key={`${draft.trade}-${selectedPackage}`}
@@ -615,3 +665,4 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
     </section>
   );
 }
+
