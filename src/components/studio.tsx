@@ -141,9 +141,11 @@ const trades: Trade[] = [
 
 const areas = ["West Bay", "The Pearl", "Lusail", "Al Sadd", "Msheireb"];
 const packageOptions = (trade: TradeId): DemoPackage[] =>
-  trade === "restaurant" ? ["business", "bookings", "store"] :
-  trade === "boutique" ? ["business", "store"] :
-  ["business", "bookings"];
+  trade === "restaurant"
+    ? ["business", "bookings", "store"]
+    : trade === "boutique"
+      ? ["business", "store"]
+      : ["business", "bookings"];
 
 const arabicAreas: Record<string, string> = {
   "West Bay": "الخليج الغربي",
@@ -281,44 +283,57 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
   const [selectedPackage, setSelectedPackage] = useState<DemoPackage>("bookings");
 
   useEffect(() => {
+    let restored: Draft = initial;
+    let restoredLanguage: Language = "en";
     try {
       const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-      if (savedLanguage === "ar" || savedLanguage === "en") setLanguage(savedLanguage);
+      if (savedLanguage === "ar" || savedLanguage === "en") restoredLanguage = savedLanguage;
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as Partial<Draft>;
-        setDraft((current) => ({
-          ...current,
+        restored = {
+          ...initial,
           ...saved,
           trade: trades.some((item) => item.id === saved.trade)
             ? (saved.trade as TradeId)
-            : current.trade,
-        }));
+            : initial.trade,
+          business: typeof saved.business === "string" ? saved.business : initial.business,
+          line: typeof saved.line === "string" ? saved.line : initial.line,
+          area:
+            typeof saved.area === "string" && areas.includes(saved.area)
+              ? saved.area
+              : initial.area,
+        };
       }
     } catch {
       /* ignore broken drafts */
     }
     const params = new URLSearchParams(window.location.search);
-    const storedTrade = trades.find((entry) => entry.id === draft.trade) ?? trades[0];
-    setSelectedPackage(storedTrade.packageId);
+    let nextTrade = trades.find((entry) => entry.id === restored.trade) ?? trades[0];
     if (params.get("demo") === "1") {
       const sharedTrade = params.get("trade");
-      const nextTrade = trades.find((entry) => entry.id === sharedTrade) ?? storedTrade;
+      nextTrade = trades.find((entry) => entry.id === sharedTrade) ?? nextTrade;
       const sharedPackage = params.get("package") as DemoPackage | null;
-      setSelectedPackage(sharedPackage && packageOptions(nextTrade.id).includes(sharedPackage) ? sharedPackage : nextTrade.packageId);
-      setLanguage(params.get("lang") === "ar" ? "ar" : "en");
-      setDraft((current) => ({
-        ...current,
-        trade: trades.some((entry) => entry.id === sharedTrade)
-          ? (sharedTrade as TradeId)
-          : current.trade,
-        business: (params.get("business") ?? current.business).slice(0, 48),
-        line: (params.get("line") ?? current.line).slice(0, 100),
+      setSelectedPackage(
+        sharedPackage && packageOptions(nextTrade.id).includes(sharedPackage)
+          ? sharedPackage
+          : nextTrade.packageId,
+      );
+      restoredLanguage = params.get("lang") === "ar" ? "ar" : "en";
+      restored = {
+        ...restored,
+        trade: nextTrade.id,
+        business: (params.get("business") ?? restored.business).slice(0, 48),
+        line: (params.get("line") ?? restored.line).slice(0, 100),
         area: areas.includes(params.get("area") ?? "")
           ? (params.get("area") as string)
-          : current.area,
-      }));
+          : restored.area,
+      };
+    } else {
+      setSelectedPackage(nextTrade.packageId);
     }
+    setDraft(restored);
+    setLanguage(restoredLanguage);
     setReady(true);
   }, []);
 
@@ -367,6 +382,12 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
     setSelectedPackage(next.packageId);
   }
 
+  function choosePackage(id: DemoPackage) {
+    setSelectedPackage(id);
+    setPicked(0);
+    setWhen(0);
+  }
+
   function shareDemo() {
     const url = new URL(window.location.href);
     url.search = new URLSearchParams({
@@ -386,8 +407,15 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
     );
   }
 
-  const packageName = packages.find((item) => item.id === selectedPackage)?.name ?? "Business Website";
-  const summary = `${name} · ${trade.label} · ${packageName} · ${draft.area} · ${previewItem.name} · ${previewTime} · ${language === "ar" ? "Arabic preview" : "English preview"}`;
+  const packageName =
+    packages.find((item) => item.id === selectedPackage)?.name ?? "Business Website";
+  const packageDetail =
+    selectedPackage === "bookings"
+      ? `${previewItem.name} · ${previewTime}`
+      : selectedPackage === "store"
+        ? `${previewItem.name} · sample order`
+        : `Enquiry about ${previewItem.name}`;
+  const summary = `${name} · ${trade.label} · ${packageName} · ${draft.area} · ${packageDetail} · ${language === "ar" ? "Arabic preview" : "English preview"}`;
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-12">
@@ -438,15 +466,33 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
             </div>
           </fieldset>
           <fieldset>
-            <legend className="text-xs font-semibold uppercase tracking-wider text-muted">Website package</legend>
+            <legend className="text-xs font-semibold uppercase tracking-wider text-muted">
+              Website package
+            </legend>
             <div className="mt-2 space-y-2">
               {packageOptions(draft.trade).map((id) => {
                 const item = packages.find((entry) => entry.id === id)!;
-                const detail = id === "business" ? "Pages and customer enquiries" : id === "bookings" ? "Services, availability and bookings" : "Products, cart and sample orders";
-                return <button key={id} type="button" aria-pressed={selectedPackage === id} onClick={() => setSelectedPackage(id)} className={`w-full rounded-xl border p-3 text-start ${selectedPackage === id ? "border-copper bg-paper-deep" : "border-line bg-surface"}`}>
-                  <span className="flex justify-between gap-2 text-sm font-semibold"><span>{item.name}</span><span>QAR {item.price}</span></span>
-                  <span className="mt-1 block text-xs text-muted">{detail}</span>
-                </button>;
+                const detail =
+                  id === "business"
+                    ? "Pages and customer enquiries"
+                    : id === "bookings"
+                      ? "Services, availability and bookings"
+                      : "Products, cart and sample orders";
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={selectedPackage === id}
+                    onClick={() => choosePackage(id)}
+                    className={`w-full rounded-xl border p-3 text-start ${selectedPackage === id ? "border-copper bg-paper-deep" : "border-line bg-surface"}`}
+                  >
+                    <span className="flex justify-between gap-2 text-sm font-semibold">
+                      <span>{item.name}</span>
+                      <span>QAR {item.price}</span>
+                    </span>
+                    <span className="mt-1 block text-xs text-muted">{detail}</span>
+                  </button>
+                );
               })}
             </div>
           </fieldset>
@@ -521,9 +567,7 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
           >
             <Share2 size={16} /> Share this demo on WhatsApp
           </button>
-          <p className="text-xs text-muted">
-          This demo is showing the {packageName} package.
-          </p>
+          <p className="text-xs text-muted">This demo is showing the {packageName} package.</p>
         </form>
 
         <div className="overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
@@ -541,6 +585,7 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
             </span>
           </div>
           <DemoWebsite
+            key={`${draft.trade}-${selectedPackage}`}
             sector={draft.trade}
             packageId={selectedPackage}
             name={previewName}

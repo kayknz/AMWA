@@ -29,8 +29,7 @@ const demoPhotos: Record<Sector, string> = {
   gym: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
   salon:
     "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1400&q=85",
-  firm:
-    "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85",
+  firm: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85",
   property:
     "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=85",
 };
@@ -179,6 +178,7 @@ export function DemoWebsite({
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
+  const [checkoutMode, setCheckoutMode] = useState(false);
   const [modal, setModal] = useState(false);
   const rtl = language === "ar";
   const dark = sector === "restaurant" || sector === "gym" || sector === "firm";
@@ -349,6 +349,32 @@ export function DemoWebsite({
       <ArrowUpRight size={15} />
     </button>
   );
+  const packageCtaLabel =
+    packageId === "business"
+      ? language === "ar"
+        ? "تواصل معنا"
+        : sector === "firm"
+          ? t.enquire
+          : "Contact us"
+      : packageId === "store"
+        ? sector === "restaurant"
+          ? language === "ar"
+            ? "ابدأ طلبك"
+            : "Start an order"
+          : t.browse
+        : sector === "restaurant"
+          ? t.book
+          : sector === "gym"
+            ? t.class
+            : sector === "property"
+              ? language === "ar"
+                ? "اطلب معاينة"
+                : "Request a viewing"
+              : t.appointment;
+  const packageCtaAction = () =>
+    packageId === "store"
+      ? document.getElementById("offer")?.scrollIntoView({ behavior: "smooth" })
+      : setModal(true);
   const miniNav = (
     <nav className="hidden items-center gap-6 text-xs font-medium md:flex">
       {t.nav.map((label, i) => (
@@ -380,28 +406,7 @@ export function DemoWebsite({
             {cart}
           </span>
         )}
-        {button(
-          packageId === "store"
-            ? sector === "restaurant"
-              ? "Order online"
-              : t.browse
-            : packageId === "bookings"
-              ? sector === "restaurant"
-                ? t.book
-                : sector === "gym"
-                  ? t.plans
-                  : sector === "property"
-                    ? t.homes
-                    : t.appointment
-              : language === "ar"
-                ? "تواصل معنا"
-                : "Contact us",
-          () =>
-            packageId === "store"
-              ? document.getElementById("offer")?.scrollIntoView({ behavior: "smooth" })
-              : setModal(true),
-          "min-h-10 px-4 text-xs",
-        )}
+        {button(packageCtaLabel, packageCtaAction, "min-h-10 px-4 text-xs")}
       </div>
     </header>
   );
@@ -463,10 +468,10 @@ export function DemoWebsite({
               document.getElementById("offer")?.scrollIntoView({ behavior: "smooth" }),
             )}
             <button
-              onClick={() => setModal(true)}
+              onClick={packageCtaAction}
               className="min-h-11 rounded-full border border-current/25 px-5 text-sm"
             >
-              {t.book}
+              {packageCtaLabel}
             </button>
           </div>
           <div className="mt-10 flex gap-5 text-xs">
@@ -512,7 +517,10 @@ export function DemoWebsite({
               key={item.name}
               onClick={() => {
                 setPicked(i);
-                setModal(true);
+                if (packageId === "store") {
+                  setCart((count) => count + 1);
+                  setMessage(t.added);
+                } else setModal(true);
               }}
               className="group rounded-xl border border-current/15 p-4 text-start transition-colors hover:bg-white/5"
             >
@@ -524,7 +532,7 @@ export function DemoWebsite({
                 <span className="text-sm font-sans opacity-70">{item.price}</span>
               </span>
               <span className="mt-2 block text-xs opacity-55">
-                {t.details}{" "}
+                {packageId === "store" ? t.add : t.details}{" "}
                 <ArrowRight
                   size={12}
                   className="ms-1 inline transition-transform group-hover:translate-x-1"
@@ -539,13 +547,25 @@ export function DemoWebsite({
         className={`mx-5 my-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl p-6 md:mx-10 md:p-9 ${accent} text-[var(--color-demo-swatch-03)]`}
       >
         {titleBlock(
-          t.tonight,
-          "Your evening, at our table",
-          `${t.guests}: 2–6 · Indoor and terrace seating.`,
+          packageId === "store" ? "Order online" : t.tonight,
+          packageId === "store" ? "Bring dinner to your table" : "Your evening, at our table",
+          packageId === "store"
+            ? "Choose a favourite from the menu and build a sample order."
+            : `${t.guests}: 2–6 · Indoor and terrace seating.`,
         )}
         {button(
-          t.book,
-          () => setModal(true),
+          packageId === "store" && cart > 0
+            ? language === "ar"
+              ? "راجع طلبك التجريبي"
+              : "Review sample order"
+            : packageCtaLabel,
+          packageId === "store" && cart > 0
+            ? () => {
+                setCheckoutMode(true);
+                setMessage("");
+                setModal(true);
+              }
+            : packageCtaAction,
           "bg-[var(--color-demo-swatch-03)] text-[var(--color-demo-swatch-67)]",
         )}
       </section>
@@ -556,9 +576,17 @@ export function DemoWebsite({
   const boutique = (
     <>
       <div className="bg-[var(--color-demo-swatch-58)] px-5 py-2 text-center text-[10px] tracking-wide text-[var(--color-demo-swatch-16)]">
-        Complimentary Doha delivery on orders over QAR 500{" "}
-        <ArrowRight size={11} className="mx-1 inline" />
-        Discover the edit
+        {packageId === "store" ? (
+          <>
+            Complimentary Doha delivery on orders over QAR 500{" "}
+            <ArrowRight size={11} className="mx-1 inline" /> Discover the edit
+          </>
+        ) : (
+          <>
+            A considered edit of pieces made to stay{" "}
+            <ArrowRight size={11} className="mx-1 inline" /> Get in touch
+          </>
+        )}
       </div>
       <section
         id="top"
@@ -627,52 +655,76 @@ export function DemoWebsite({
                 <button
                   onClick={() => {
                     setPicked(i);
-                  if (packageId === "store") {
-                    setCart((n) => n + 1);
-                    setMessage(t.added);
-                  } else setModal(true);
+                    if (packageId === "store") {
+                      setCart((n) => n + 1);
+                      setMessage(t.added);
+                    } else setModal(true);
                   }}
-                aria-label={packageId === "store" ? t.add : t.details}
+                  aria-label={packageId === "store" ? t.add : t.details}
                   className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-current/20"
                 >
-                  <Plus size={15} />
+                  {packageId === "store" ? <Plus size={15} /> : <ArrowUpRight size={15} />}
                 </button>
               </div>
             </article>
           ))}
         </div>
       </section>
-      <section className="mx-5 grid gap-5 rounded-2xl bg-[var(--color-demo-swatch-58)] p-6 text-[var(--color-demo-swatch-15)] md:mx-10 md:grid-cols-2 md:items-center md:p-9">
-        <div>
+      {packageId === "store" ? (
+        <section className="mx-5 grid gap-5 rounded-2xl bg-[var(--color-demo-swatch-58)] p-6 text-[var(--color-demo-swatch-15)] md:mx-10 md:grid-cols-2 md:items-center md:p-9">
+          <div>
+            {titleBlock(
+              t.bag,
+              cart ? `${cart} pieces, beautifully chosen` : t.empty,
+              "Complimentary gift wrap on every order. Easy exchanges within 14 days.",
+            )}
+            {message && <p className="mt-3 text-xs font-medium">{message}</p>}
+          </div>
+          <div className="flex flex-col gap-3 md:items-end">
+            {items.slice(0, 2).map((item, i) => (
+              <button
+                key={item.name}
+                onClick={() => {
+                  setPicked(i);
+                  setCart((n) => n + 1);
+                  setMessage(t.added);
+                }}
+                className="flex w-full max-w-sm items-center justify-between rounded-xl bg-white/60 p-4 text-sm"
+              >
+                <span>{item.name}</span>
+                <span>
+                  QAR {item.price} <Plus size={13} className="ms-2 inline" />
+                </span>
+              </button>
+            ))}
+            {button("Continue shopping", () =>
+              document.getElementById("offer")?.scrollIntoView({ behavior: "smooth" }),
+            )}
+            {cart > 0 &&
+              button(
+                language === "ar" ? "متابعة إلى الطلب التجريبي" : "Continue to sample checkout",
+                () => {
+                  setCheckoutMode(true);
+                  setMessage("");
+                  setModal(true);
+                },
+              )}
+          </div>
+        </section>
+      ) : (
+        <section className="mx-5 my-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-[var(--color-demo-swatch-58)] p-6 text-[var(--color-demo-swatch-15)] md:mx-10 md:p-9">
           {titleBlock(
-            t.bag,
-            cart ? `${cart} pieces, beautifully chosen` : t.empty,
-            "Complimentary gift wrap on every order. Easy exchanges within 14 days.",
+            "The collection",
+            "Find pieces you’ll keep",
+            "A thoughtful wardrobe starts with one good choice.",
           )}
-          {message && <p className="mt-3 text-xs font-medium">{message}</p>}
-        </div>
-        <div className="flex flex-col gap-3 md:items-end">
-          {items.slice(0, 2).map((item, i) => (
-            <button
-              key={item.name}
-              onClick={() => {
-                setPicked(i);
-                setCart((n) => n + 1);
-                setMessage(t.added);
-              }}
-              className="flex w-full max-w-sm items-center justify-between rounded-xl bg-white/60 p-4 text-sm"
-            >
-              <span>{item.name}</span>
-              <span>
-                QAR {item.price} <Plus size={13} className="ms-2 inline" />
-              </span>
-            </button>
-          ))}
-          {button("Continue shopping", () =>
-            document.getElementById("offer")?.scrollIntoView({ behavior: "smooth" }),
+          {button(
+            packageCtaLabel,
+            packageCtaAction,
+            "bg-[var(--color-demo-swatch-15)] text-[var(--color-demo-swatch-69)]",
           )}
-        </div>
-      </section>
+        </section>
+      )}
       {story}
       {footer}
     </>
@@ -694,7 +746,7 @@ export function DemoWebsite({
           <p className="mt-5 max-w-md text-sm leading-relaxed opacity-70">
             Good care starts with a good conversation. Meet a team that sees the whole person.
           </p>
-          {button(t.appointment, () => setModal(true), "mt-7")}
+          {button(packageCtaLabel, packageCtaAction, "mt-7")}
         </div>
         <div className="relative mt-11 flex max-w-2xl flex-wrap gap-2">
           {["Family medicine", "Dental care", "Skin health"].map((s) => (
@@ -765,7 +817,7 @@ export function DemoWebsite({
           "A team that takes time",
           "Our clinicians make space for your questions and your priorities.",
         )}
-        {button(t.appointment, () => setModal(true))}
+        {button(packageCtaLabel, packageCtaAction)}
       </section>
       {footer}
     </>
@@ -774,7 +826,9 @@ export function DemoWebsite({
   const gym = (
     <>
       <div className="bg-[var(--color-demo-swatch-36)] px-4 py-2 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--color-demo-swatch-03)]">
-        Your first class is on us · Claim a trial pass{" "}
+        {packageId === "bookings"
+          ? "Your first class is on us · Claim a trial pass"
+          : "Training for a stronger team · Get in touch"}{" "}
         <ArrowRight size={12} className="mx-1 inline" />
       </div>
       <section
@@ -792,7 +846,7 @@ export function DemoWebsite({
           <p className="mt-5 max-w-md text-sm text-[var(--color-demo-swatch-38)]">
             No mirrors. No shortcuts. Just good people, expert coaching, and work that adds up.
           </p>
-          {button(t.class, () => setModal(true), "mt-7")}
+          {button(packageCtaLabel, packageCtaAction, "mt-7")}
         </div>
         <div className="relative mt-14 grid grid-cols-3 border-y border-white/15 py-5 text-center">
           <div>
@@ -930,7 +984,7 @@ export function DemoWebsite({
             "Good hair, good energy",
             "A considered service menu. Choose what feels right and we’ll take it from there.",
           )}
-          {button(t.appointment, () => setModal(true))}
+          {button(packageCtaLabel, packageCtaAction)}
         </div>
         <div className="mt-8 divide-y divide-current/15 border-y border-current/15">
           {items.map((item, i) => (
@@ -979,7 +1033,7 @@ export function DemoWebsite({
           "Take a little time for yourself",
           "Tell us what you have in mind. We'll find a time that works.",
         )}
-        {button(t.appointment, () => setModal(true))}
+        {button(packageCtaLabel, packageCtaAction)}
       </section>
       {footer}
     </>
@@ -998,7 +1052,7 @@ export function DemoWebsite({
           Independent counsel for the moments that matter. We bring clarity, perspective, and steady
           hands to every decision.
         </p>
-        {button(t.enquire, () => setModal(true), "mt-7")}
+        {button(packageCtaLabel, packageCtaAction, "mt-7")}
       </section>
       <section className="grid gap-10 px-6 py-12 md:grid-cols-[.75fr_1.25fr] md:px-10 md:py-16">
         <div>
@@ -1055,7 +1109,7 @@ export function DemoWebsite({
           "Tell us what you’re navigating",
           "A confidential first conversation to understand your situation and explain how we can help.",
         )}
-        {button(t.enquire, () => setModal(true))}
+        {button(packageCtaLabel, packageCtaAction)}
       </section>
       {footer}
     </>
@@ -1183,7 +1237,12 @@ export function DemoWebsite({
                       }}
                       className="mt-4 w-full rounded-full border border-current/20 py-2 text-xs font-semibold"
                     >
-                      {t.details} <ArrowRight size={12} className="ms-1 inline" />
+                      {packageId === "business"
+                        ? language === "ar"
+                          ? "استفسر عن العقار"
+                          : "Ask about this home"
+                        : t.details}{" "}
+                      <ArrowRight size={12} className="ms-1 inline" />
                     </button>
                   </div>
                 </article>
@@ -1226,7 +1285,7 @@ export function DemoWebsite({
           "Come see how it feels",
           "A private viewing, at a time that works for you.",
         )}
-        {button(t.appointment, () => setModal(true))}
+        {button(packageCtaLabel, packageCtaAction)}
       </section>
       {footer}
     </>
@@ -1260,38 +1319,54 @@ export function DemoWebsite({
         <h2 className="mt-3 font-display text-3xl">
           {message
             ? t.success
-            : sector === "boutique"
-              ? t.bag
-              : sector === "restaurant"
-                ? t.tonight
-                : sector === "gym"
-                  ? t.class
-                  : t.appointment}
+            : checkoutMode
+              ? language === "ar"
+                ? "إتمام الطلب التجريبي"
+                : "Sample checkout"
+              : packageId === "business"
+                ? language === "ar"
+                  ? "تواصل معنا"
+                  : "Start a conversation"
+                : packageId === "store"
+                  ? sector === "boutique"
+                    ? t.bag
+                    : language === "ar"
+                      ? "ابدأ طلبك"
+                      : "Your order"
+                  : sector === "restaurant"
+                    ? t.tonight
+                    : sector === "gym"
+                      ? t.class
+                      : t.appointment}
         </h2>
         <p className="mt-2 text-sm text-[var(--color-demo-swatch-23)]">
           {message ||
-            `${selectedItem.name} · ${selectedItem.meta} · ${selectedItem.price === "Consult" ? "Consult" : `QAR ${selectedItem.price}`}`}
+            (checkoutMode
+              ? `${cart} ${cart === 1 ? "item" : "items"} in your sample order. No payment or order is submitted.`
+              : `${selectedItem.name} · ${selectedItem.meta} · ${selectedItem.price === "Consult" ? "Consult" : `QAR ${selectedItem.price}`}`)}
         </p>
-        {!message && (
+        {!message && !checkoutMode && (
           <>
-            {packageId === "bookings" && <div className="mt-5 flex flex-wrap gap-2">
-              {(sector === "restaurant" ||
-              sector === "clinic" ||
-              sector === "salon" ||
-              sector === "property" ||
-              sector === "firm"
-                ? times
-                : ["Today", "This week", "Next week"]
-              ).map((slot, i) => (
-                <button
-                  key={slot}
-                  onClick={() => setActiveTime(i)}
-                  className={`rounded-full border px-3 py-2 text-xs ${i === activeTime ? "border-[var(--color-demo-swatch-04)] bg-[var(--color-demo-swatch-04)] text-white" : "border-black/15"}`}
-                >
-                  {slot}
-                </button>
-              ))}
-            </div>}
+            {packageId === "bookings" && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {(sector === "restaurant" ||
+                sector === "clinic" ||
+                sector === "salon" ||
+                sector === "property" ||
+                sector === "firm"
+                  ? times
+                  : ["Today", "This week", "Next week"]
+                ).map((slot, i) => (
+                  <button
+                    key={slot}
+                    onClick={() => setActiveTime(i)}
+                    className={`rounded-full border px-3 py-2 text-xs ${i === activeTime ? "border-[var(--color-demo-swatch-04)] bg-[var(--color-demo-swatch-04)] text-white" : "border-black/15"}`}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+            )}
             <label className="mt-4 block text-xs font-medium">
               {packageId === "store"
                 ? "Email for order updates"
@@ -1301,18 +1376,39 @@ export function DemoWebsite({
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-              placeholder={packageId === "store" ? "you@example.com" : "Your name"}
+                placeholder={packageId === "store" ? "you@example.com" : "Your name"}
                 className="mt-2 h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-sm"
               />
             </label>
           </>
         )}
         {button(
-          message ? t.next : packageId === "store" ? t.add : packageId === "bookings" ? t.request : "Send enquiry",
+          message
+            ? t.next
+            : checkoutMode
+              ? language === "ar"
+                ? "إنهاء الطلب التجريبي"
+                : "Finish sample checkout"
+              : packageId === "store"
+                ? t.add
+                : packageId === "bookings"
+                  ? t.request
+                  : language === "ar"
+                    ? "أرسل استفساراً"
+                    : "Send enquiry",
           () => {
             if (message) {
               setModal(false);
               setMessage("");
+              setCheckoutMode(false);
+              return;
+            }
+            if (checkoutMode) {
+              setMessage(
+                language === "ar"
+                  ? "اكتملت معاينة الطلب · لم يتم الدفع أو الإرسال."
+                  : "Sample checkout complete · nothing was purchased or submitted.",
+              );
               return;
             }
             if (packageId === "store") {
