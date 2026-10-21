@@ -18,6 +18,32 @@ import {
 type Sector = "restaurant" | "boutique" | "clinic" | "gym" | "salon" | "firm" | "property";
 type Item = { name: string; meta: string; price: string };
 
+const demoPhotos: Record<Sector, string> = {
+  restaurant:
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=85",
+  boutique:
+    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=85",
+  clinic:
+    "https://images.unsplash.com/photo-1622902046580-2b47f47f5471?auto=format&fit=crop&w=1400&q=85",
+  gym: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
+  salon:
+    "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1400&q=85",
+  firm:
+    "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1400&q=85",
+  property:
+    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1400&q=85",
+};
+
+const demoPhotoAlt: Record<Sector, string> = {
+  restaurant: "Warm restaurant interior prepared for dinner",
+  boutique: "A considered fashion collection in a sunlit studio",
+  clinic: "A calm, modern care space",
+  gym: "A bright training floor with strength equipment",
+  salon: "A welcoming contemporary salon",
+  firm: "A light-filled professional studio",
+  property: "A modern home framed by a landscaped garden",
+};
+
 const copy = {
   en: {
     nav: ["Our story", "Explore", "Visit us"],
@@ -171,6 +197,16 @@ export function DemoWebsite({
               : "bg-[var(--color-demo-swatch-42)]";
   const displayName = name || "Your business";
   const selectedItem = items[picked] ?? items[0];
+  const photo = (className: string, eager = false) => (
+    <img
+      src={demoPhotos[sector]}
+      alt={demoPhotoAlt[sector]}
+      loading={eager ? "eager" : "lazy"}
+      fetchPriority={eager ? "high" : "auto"}
+      decoding="async"
+      className={className}
+    />
+  );
   const words = {
     restaurant: [
       "A slower kind of evening",
@@ -375,11 +411,11 @@ export function DemoWebsite({
       className="grid gap-8 border-t border-current/10 px-6 py-12 md:grid-cols-2 md:px-10 md:py-16"
     >
       <div>{titleBlock(t.story, storyCopy[1], storyCopy[2])}</div>
-      <div
-        className={`flex min-h-48 items-end rounded-2xl p-6 md:p-8 ${sector === "restaurant" ? "bg-[var(--color-demo-swatch-13)]" : sector === "boutique" ? "bg-[var(--color-demo-swatch-58)] text-[var(--color-demo-swatch-15)]" : sector === "clinic" ? "bg-[var(--color-demo-swatch-56)] text-[var(--color-demo-swatch-06)]" : sector === "gym" ? "bg-[var(--color-demo-swatch-08)]" : sector === "salon" ? "bg-[var(--color-demo-swatch-59)] text-[var(--color-demo-swatch-19)]" : sector === "firm" ? "bg-[var(--color-demo-swatch-11)]" : "bg-[var(--color-demo-swatch-58)] text-[var(--color-demo-swatch-15)]"}`}
-      >
-        <p className="max-w-xs font-display text-2xl leading-snug">{storyCopy[3]}</p>
-        <p className="ms-auto self-end text-[10px] uppercase tracking-widest opacity-60">
+      <div className="relative flex min-h-64 items-end overflow-hidden rounded-2xl p-6 text-white md:p-8">
+        {photo("absolute inset-0 h-full w-full object-cover")}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/5" />
+        <p className="relative z-10 max-w-xs font-display text-2xl leading-snug">{storyCopy[3]}</p>
+        <p className="relative z-10 ms-auto self-end text-[10px] uppercase tracking-widest text-white/80">
           {language === "ar" ? "وعدنا" : "Our promise"}
         </p>
       </div>
@@ -438,13 +474,8 @@ export function DemoWebsite({
           </div>
         </div>
         <div className="relative flex min-h-72 items-end overflow-hidden bg-[var(--color-demo-swatch-20)] p-7 md:p-10">
-          <div
-            className="absolute inset-0 opacity-35"
-            style={{
-              background:
-                "radial-gradient(ellipse at 52% 65%, var(--color-demo-swatch-51) 0%, transparent 38%), linear-gradient(145deg, transparent 38%, var(--color-demo-swatch-10) 39%, var(--color-demo-swatch-10) 40%, transparent 41%), linear-gradient(35deg, transparent 54%, var(--color-demo-swatch-26) 55%, var(--color-demo-swatch-26) 72%, transparent 73%)",
-            }}
-          />
+          {photo("absolute inset-0 h-full w-full object-cover", true)}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/10" />
           <div className="relative max-w-xs border-s-2 border-[var(--color-demo-swatch-42)] ps-4">
             <p className="text-[10px] uppercase tracking-[.2em]">{t.tonight}</p>
             <p className="mt-1 font-display text-2xl">The chef's seasonal table</p>
@@ -539,9 +570,9 @@ export function DemoWebsite({
           )}
         </div>
         <div className="relative flex min-h-72 items-center justify-center overflow-hidden bg-[var(--color-demo-swatch-45)]">
-          <div className="absolute h-64 w-56 rotate-[-8deg] rounded-[45%_45%_12%_12%] bg-[var(--color-demo-swatch-28)] shadow-xl md:h-80 md:w-64" />
-          <div className="absolute mt-28 h-28 w-60 rotate-[6deg] rounded-[50%_50%_12%_12%] border-[18px] border-[var(--color-demo-swatch-41)] md:mt-40 md:w-80" />
-          <p className="absolute bottom-5 right-6 text-[10px] uppercase tracking-[.22em]">
+          {photo("absolute inset-0 h-full w-full object-cover", true)}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-black/5" />
+          <p className="absolute bottom-5 right-6 text-[10px] uppercase tracking-[.22em] text-white">
             The Lune wardrobe
           </p>
         </div>
