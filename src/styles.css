@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@theme {
+  --color-demo-swatch-01: #151916;
+  --color-demo-swatch-02: #18211d;
+  --color-demo-swatch-03: #20251f;
+  --color-demo-swatch-04: #252923;
+  --color-demo-swatch-05: #252a23;
+  --color-demo-swatch-06: #273b33;
+  --color-demo-swatch-07: #293735;
+  --color-demo-swatch-08: #2e3429;
+  --color-demo-swatch-09: #302d26;
+  --color-demo-swatch-10: #30372e;
+  --color-demo-swatch-11: #303b3a;
+  --color-demo-swatch-12: #303f3c;
+  --color-demo-swatch-13: #333d32;
+  --color-demo-swatch-14: #385347;
+  --color-demo-swatch-15: #393126;
+  --color-demo-swatch-16: #44392d;
+  --color-demo-swatch-17: #444a3f;
+  --color-demo-swatch-18: #493e39;
+  --color-demo-swatch-19: #533e3a;
+  --color-demo-swatch-20: #58624e;
+  --color-demo-swatch-21: #71907d;
+  --color-demo-swatch-22: #77665d;
+  --color-demo-swatch-23: #777a70;
+  --color-demo-swatch-24: #879d8f;
+  --color-demo-swatch-25: #8a8b75;
+  --color-demo-swatch-26: #8c6945;
+  --color-demo-swatch-27: #8c7452;
+  --color-demo-swatch-28: #927d67;
+  --color-demo-swatch-29: #9d927b;
+  --color-demo-swatch-30: #a08b72;
+  --color-demo-swatch-31: #b59e7d;
+  --color-demo-swatch-32: #b69f8c;
+  --color-demo-swatch-33: #b7b4a7;
+  --color-demo-swatch-34: #bd766f;
+  --color-demo-swatch-35: #c59a8f;
+  --color-demo-swatch-36: #c6f36b;
+  --color-demo-swatch-37: #c8c4b7;
+  --color-demo-swatch-38: #c8c8bc;
+  --color-demo-swatch-39: #c9aa83;
+  --color-demo-swatch-40: #d2d5cf;
+  --color-demo-swatch-41: #d3b791;
+  --color-demo-swatch-42: #d4a76c;
+  --color-demo-swatch-43: #d4b78c;
+  --color-demo-swatch-44: #d5c3a5;
+  --color-demo-swatch-45: #d5c5ad;
+  --color-demo-swatch-46: #d7d6cb;
+  --color-demo-swatch-47: #d8b6aa;
+  --color-demo-swatch-48: #d8bd91;
+  --color-demo-swatch-49: #d8e9df;
+  --color-demo-swatch-50: #d99b8c;
+  --color-demo-swatch-51: #d9b27b;
+  --color-demo-swatch-52: #d9c6a8;
+  --color-demo-swatch-53: #dfd6ce;
+  --color-demo-swatch-54: #dfe1d6;
+  --color-demo-swatch-55: #e3d8c4;
+  --color-demo-swatch-56: #e3eee7;
+  --color-demo-swatch-57: #e7d7ca;
+  --color-demo-swatch-58: #e9dfd0;
+  --color-demo-swatch-59: #eee0dd;
+  --color-demo-swatch-60: #eee3d0;
+  --color-demo-swatch-61: #f0c7b5;
+  --color-demo-swatch-62: #f0e5e1;
+  --color-demo-swatch-63: #f0ece4;
+  --color-demo-swatch-64: #f0f1e9;
+  --color-demo-swatch-65: #f0f3ef;
+  --color-demo-swatch-66: #f1e6d4;
+  --color-demo-swatch-67: #f4eee4;
+  --color-demo-swatch-68: #f6eee7;
+  --color-demo-swatch-69: #faf8f3;
+  --color-paper: #f4f1ea;
+  --color-paper-deep: #ebe4d8;
+  --color-ink: #12202b;
+  --color-ink-soft: #243442;
+  --color-muted: #5c6a74;
+  --color-copper: #b56a3c;
+  --color-copper-deep: #8d4e28;
+  --color-line: #d8cfc0;
+  --color-surface: #fffcf7;
+  --font-sans: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-display: Georgia, ui-serif, serif;
+  --radius-hero: 2rem;
+  --radius-card: 1.25rem;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.55;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  ::selection {
+    background: #e8c4a8;
+    color: var(--color-ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
