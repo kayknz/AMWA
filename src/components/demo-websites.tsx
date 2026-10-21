@@ -547,11 +547,21 @@ export function DemoWebsite({
         className={`mx-5 my-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl p-6 md:mx-10 md:p-9 ${accent} text-[var(--color-demo-swatch-03)]`}
       >
         {titleBlock(
-          packageId === "store" ? "Order online" : t.tonight,
-          packageId === "store" ? "Bring dinner to your table" : "Your evening, at our table",
+          packageId === "store"
+            ? "Order online"
+            : packageId === "business"
+              ? "A thoughtful first conversation"
+              : t.tonight,
+          packageId === "store"
+            ? "Bring dinner to your table"
+            : packageId === "business"
+              ? "Tell us what you’re planning"
+              : "Your evening, at our table",
           packageId === "store"
             ? "Choose a favourite from the menu and build a sample order."
-            : `${t.guests}: 2–6 · Indoor and terrace seating.`,
+            : packageId === "business"
+              ? "Share the kind of gathering you have in mind and we’ll help with the next step."
+              : `${t.guests}: 2–6 · Indoor and terrace seating.`,
         )}
         {button(
           packageId === "store" && cart > 0
@@ -1191,7 +1201,7 @@ export function DemoWebsite({
                   area.toLowerCase().includes(search.toLowerCase())) &&
                 (filter === "All homes" || (filter === "Villas" ? i === 2 : i !== 2)),
             )
-            .map((item, i) => {
+            .map((item) => {
               const index = items.indexOf(item);
               return (
                 <article
@@ -1281,9 +1291,11 @@ export function DemoWebsite({
       {story}
       <section className="mx-5 my-8 flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-[var(--color-demo-swatch-48)] p-6 text-[var(--color-demo-swatch-09)] md:mx-10 md:p-9">
         {titleBlock(
-          "Your next chapter",
-          "Come see how it feels",
-          "A private viewing, at a time that works for you.",
+          packageId === "bookings" ? "Your next chapter" : "A home that feels right",
+          packageId === "bookings" ? "Come see how it feels" : "Tell us what matters to you",
+          packageId === "bookings"
+            ? "A private viewing, at a time that works for you."
+            : "Share what you’re looking for and our team will help you explore the right options.",
         )}
         {button(packageCtaLabel, packageCtaAction)}
       </section>
@@ -1301,7 +1313,13 @@ export function DemoWebsite({
       <section
         role="dialog"
         aria-modal="true"
-        aria-label={t.request}
+        aria-label={
+          checkoutMode
+            ? language === "ar"
+              ? "إتمام الطلب التجريبي"
+              : "Sample checkout"
+            : t.request
+        }
         dir={rtl ? "rtl" : "ltr"}
         className="w-full max-w-md rounded-2xl bg-[var(--color-demo-swatch-69)] p-6 text-[var(--color-demo-swatch-04)] shadow-2xl md:p-8"
       >

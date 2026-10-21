@@ -354,9 +354,6 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
   const previewName =
     language === "ar" && draft.business === trade.defaultName ? localized.business : name;
   const previewLine = language === "ar" && draft.line === trade.defaultLine ? localized.line : line;
-  const previewListLabel = language === "ar" ? localized.listLabel : trade.listLabel;
-  const previewVerb = language === "ar" ? localized.verb : trade.verb;
-  const previewBookLabel = language === "ar" ? localized.bookLabel : trade.bookLabel;
   const previewItems = language === "ar" ? localized.items : trade.items;
   const previewTimes = language === "ar" ? localized.times : trade.times;
   const previewItem = previewItems[picked] ?? previewItems[0];
