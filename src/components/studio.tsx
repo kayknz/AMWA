@@ -347,6 +347,21 @@ export function Studio({ onKeep }: { onKeep: (summary: string, packageId: Packag
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   }, [language, ready]);
 
+  useEffect(() => {
+    if (!ready) return;
+    const url = new URL(window.location.href);
+    url.search = new URLSearchParams({
+      demo: "1",
+      trade: draft.trade,
+      lang: language,
+      business: draft.business.trim() || trades.find((item) => item.id === draft.trade)!.defaultName,
+      line: draft.line.trim() || trades.find((item) => item.id === draft.trade)!.defaultLine,
+      area: draft.area,
+      package: selectedPackage,
+    }).toString();
+    window.history.replaceState(window.history.state, "", url);
+  }, [draft, language, ready, selectedPackage]);
+
   const trade = trades.find((item) => item.id === draft.trade) ?? trades[0];
   const name = draft.business.trim() || trade.defaultName;
   const line = draft.line.trim() || trade.defaultLine;
