@@ -171,6 +171,20 @@ export function DemoWebsite({
   onAction: (summary: string, index: number) => void;
 }) {
   const t = copy[language];
+  const storeAddLabel =
+    sector === "restaurant" ? (language === "ar" ? "أضف إلى الطلب" : "Add to order") : t.add;
+  const storeAddedLabel =
+    sector === "restaurant"
+      ? language === "ar"
+        ? "أُضيف إلى طلبك"
+        : "Added to your order"
+      : t.added;
+  const demoHours =
+    sector === "restaurant"
+      ? language === "ar"
+        ? "يومياً · 18:00–23:00"
+        : "Daily · 18:00–23:00"
+      : t.hours;
   const [activeTime, setActiveTime] = useState(1);
   const [cart, setCart] = useState(0);
   const [saved, setSaved] = useState<number[]>([]);
@@ -445,7 +459,7 @@ export function DemoWebsite({
           {area} · {t.locationText}
         </p>
       </div>
-      <p className={quiet}>{t.hours}</p>
+      <p className={quiet}>{demoHours}</p>
       <p className="uppercase tracking-widest opacity-50">{t.note}</p>
     </footer>
   );
@@ -519,7 +533,7 @@ export function DemoWebsite({
                 setPicked(i);
                 if (packageId === "store") {
                   setCart((count) => count + 1);
-                  setMessage(t.added);
+                  setMessage(storeAddedLabel);
                 } else setModal(true);
               }}
               className="group rounded-xl border border-current/15 p-4 text-start transition-colors hover:bg-white/5"
@@ -532,7 +546,7 @@ export function DemoWebsite({
                 <span className="text-sm font-sans opacity-70">{item.price}</span>
               </span>
               <span className="mt-2 block text-xs opacity-55">
-                {packageId === "store" ? t.add : t.details}{" "}
+                {packageId === "store" ? storeAddLabel : t.details}{" "}
                 <ArrowRight
                   size={12}
                   className="ms-1 inline transition-transform group-hover:translate-x-1"
@@ -669,10 +683,10 @@ export function DemoWebsite({
                     setPicked(i);
                     if (packageId === "store") {
                       setCart((n) => n + 1);
-                      setMessage(t.added);
+                      setMessage(storeAddedLabel);
                     } else setModal(true);
                   }}
-                  aria-label={packageId === "store" ? t.add : t.details}
+                  aria-label={packageId === "store" ? storeAddLabel : t.details}
                   className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-current/20"
                 >
                   {packageId === "store" ? <Plus size={15} /> : <ArrowUpRight size={15} />}
